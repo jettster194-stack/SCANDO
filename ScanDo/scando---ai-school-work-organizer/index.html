@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="google-site-verification" content="uySdtzd--WQ2BG2Mj-iCFq3CChTHCzlhjn5e4wKhsEg" />
+    
     <!-- Primary Meta Tags -->
     <title>ScanDo | AI School Work Organizer</title>
     <meta name="title" content="ScanDo | AI School Work Organizer">
@@ -13,23 +13,18 @@
     <!-- Favicon (Emoji as Icon) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://scando.app/">
-    <meta property="og:title" content="ScanDo | AI School Work Organizer">
-    <meta property="og:description" content="Instantly convert notes and screenshots into structured tasks and study plans.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=1200">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:title" content="ScanDo | AI School Work Organizer">
-    <meta property="twitter:description" content="Instantly convert notes and screenshots into structured tasks and study plans.">
-    <meta property="twitter:image" content="https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&q=80&w=1200">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Anton&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Anton&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    
+    <!-- Global Shim for process.env to prevent "black screen" crashes on load -->
+    <script>
+      if (typeof window !== 'undefined' && typeof window.process === 'undefined') {
+        window.process = { env: {} };
+      }
+    </script>
+
     <style>
       body {
         font-family: 'Inter', sans-serif;
@@ -40,6 +35,10 @@
       .font-anton {
         font-family: 'Anton', sans-serif;
       }
+      .font-serif-italic {
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+      }
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -48,7 +47,6 @@
         scrollbar-width: none;
       }
       
-      /* Animations */
       @keyframes marquee {
         0% { transform: translateX(0); }
         100% { transform: translateX(-50%); }
@@ -57,45 +55,46 @@
         animation: marquee 30s linear infinite;
       }
 
-      @keyframes scan-beam {
-        0%, 100% { top: 0%; opacity: 0; }
+      @keyframes scan-vertical {
+        0% { top: 0%; opacity: 0; }
         10% { opacity: 1; }
         90% { opacity: 1; }
         100% { top: 100%; opacity: 0; }
       }
-      .animate-scan-beam {
-        animation: scan-beam 2.5s ease-in-out infinite;
+      .scan-beam {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #F25F4C, transparent);
+        box-shadow: 0 0 20px #F25F4C;
+        animation: scan-vertical 4s ease-in-out infinite;
       }
 
-      @keyframes spin-3d {
-        from { transform: perspective(1000px) rotateY(0deg); }
-        to { transform: perspective(1000px) rotateY(-360deg); }
+      @keyframes float-subtle {
+        0%, 100% { transform: translateY(0) translateX(0); }
+        50% { transform: translateY(-15px) translateX(5px); }
       }
-      .animate-spin-3d {
-        animation: spin-3d 80s linear infinite;
-      }
-
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-      }
-      .animate-float {
-        animation: float 6s ease-in-out infinite;
+      .animate-float-subtle {
+        animation: float-subtle 6s ease-in-out infinite;
       }
 
-      .preserve-3d {
-        transform-style: preserve-3d;
+      .text-outline {
+        -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+        color: transparent;
       }
-      .backface-hidden {
-        backface-visibility: hidden;
+
+      .grid-bg {
+        background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+
+      .letter-spacing-tighter {
+        letter-spacing: -0.05em;
       }
       
-      /* Utilities */
-      .glass-panel {
-        background: rgba(17, 17, 17, 0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+      .perspective-2000 {
+        perspective: 2000px;
       }
     </style>
   <script type="importmap">

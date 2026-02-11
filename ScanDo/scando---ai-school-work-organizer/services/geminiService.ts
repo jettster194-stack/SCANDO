@@ -2,13 +2,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResponse, Priority } from '../types';
 
-// Helper to convert file to Base64
+/**
+ * Helper to convert file to Base64 for Gemini API input
+ */
 const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: string; mimeType: string } }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      // Remove data url prefix (e.g., "data:image/jpeg;base64,")
       const base64Data = base64String.split(',')[1];
       resolve({
         inlineData: {
@@ -22,110 +23,113 @@ const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: s
   });
 };
 
+/**
+ * Analyzes an uploaded document (image or PDF) using Gemini.
+ */
 export const analyzeDocument = async (file: File, mode: 'fast' | 'deep' = 'fast'): Promise<AnalysisResponse> => {
-  const apiKey = process.env.API_KEY;
+  // Use a fallback to empty string if process.env is not defined to avoid ReferenceErrors
+  const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : '';
+  
   if (!apiKey) {
-    throw new Error("API Key not found");
+    console.error("API_KEY is missing from environment variables.");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: apiKey || '' });
   
   const filePart = await fileToGenerativePart(file);
-
-  // Get today's date to help the AI infer relative dates like "next friday"
   const today = new Date().toISOString().split('T')[0];
 
-  let prompt = `Analyze this document. Extract the main topic as a title, write a 1-sentence summary, and extract actionable tasks. 
-  Today is ${today}. If a task implies a deadline (e.g. "by Friday"), calculate the date in YYYY-MM-DD format. 
-  If no date is mentioned, leave dueDate empty. Categorize and prioritize each task.`;
+  const systemInstruction = `You are an elite productivity strategist. 
+  Extract every actionable task from the document.
+  - Title: Catchy and descriptive.
+  - Tasks: Clear, concise, and prioritized.
+  - Dates: Map relative dates (like "tomorrow") to YYYY-MM-DD based on today (${today}).`;
+
+  let userPrompt = `Analyze the attached document and return a structured JSON task list. Today is ${today}.`;
 
   if (mode === 'deep') {
-    prompt += ` ADDITIONALLY, because this is a Deep Analysis request:
-    Create a comprehensive Study Plan / Execution Strategy to complete these tasks or learn the material.
-    1. Provide a strategic Overview.
-    2. List Prerequisites or materials needed.
-    3. Create a Schedule broken down by Day/Session, including specific techniques (e.g. Pomodoro, Feynman) and durations.
-    4. Provide specific Tips for success.`;
+    userPrompt += ` 
+    CRITICAL: This is a DEEP ANALYSIS request. Use your advanced reasoning to:
+    1. Provide a strategic OVERVIEW of the content.
+    2. List all PREREQUISITES or materials needed to succeed.
+    3. Create a 7-day STUDY_PLAN with daily sessions, durations, and specific techniques (e.g. Feynman, Pomodoro).
+    4. List 3 high-impact EXECUTION_TIPS.`;
   }
 
   const response = await ai.models.generateContent({
-    model: mode === 'deep' ? 'gemini-3-pro-preview' : 'gemini-3-flash-preview', // Use Pro for deep analysis
+    model: mode === 'deep' ? 'gemini-3-pro-preview' : 'gemini-3-flash-preview',
     contents: {
         parts: [
             filePart,
-            { text: prompt }
+            { text: userPrompt }
         ]
     },
     config: {
+      systemInstruction,
       responseMimeType: "application/json",
+      thinkingConfig: mode === 'deep' ? { thinkingBudget: 4000 } : undefined,
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          title: { type: Type.STRING, description: "A short, catchy title for the document context" },
-          summary: { type: Type.STRING, description: "A one sentence summary of what this document is about" },
+          title: { type: Type.STRING },
+          summary: { type: Type.STRING },
           tasks: {
             type: Type.ARRAY,
             items: {
               type: Type.OBJECT,
               properties: {
-                description: { type: Type.STRING, description: "The actionable task description" },
+                description: { type: Type.STRING },
                 priority: { type: Type.STRING, enum: [Priority.High, Priority.Medium, Priority.Low] },
-                category: { type: Type.STRING, description: "Category like 'Work', 'Personal', 'Errand'" },
-                dueDate: { type: Type.STRING, description: "YYYY-MM-DD format if applicable" }
+                category: { type: Type.STRING },
+                dueDate: { type: Type.STRING }
               },
               required: ["description", "priority", "category"]
             }
           },
-          // Conditional schema part for deep analysis
-          ...(mode === 'deep' ? {
-              studyPlan: {
+          studyPlan: {
+            type: Type.OBJECT,
+            properties: {
+              overview: { type: Type.STRING },
+              prerequisites: { type: Type.ARRAY, items: { type: Type.STRING } },
+              tips: { type: Type.ARRAY, items: { type: Type.STRING } },
+              schedule: {
+                type: Type.ARRAY,
+                items: {
                   type: Type.OBJECT,
                   properties: {
-                      overview: { type: Type.STRING, description: "High level strategy on how to approach this work." },
-                      prerequisites: { type: Type.ARRAY, items: { type: Type.STRING } },
-                      tips: { type: Type.ARRAY, items: { type: Type.STRING } },
-                      schedule: {
-                          type: Type.ARRAY,
-                          items: {
-                              type: Type.OBJECT,
-                              properties: {
-                                  day: { type: Type.STRING, description: "e.g. 'Day 1' or 'Monday'" },
-                                  sessions: {
-                                      type: Type.ARRAY,
-                                      items: {
-                                          type: Type.OBJECT,
-                                          properties: {
-                                              topic: { type: Type.STRING },
-                                              duration: { type: Type.STRING, description: "e.g. '45 mins'" },
-                                              activity: { type: Type.STRING, description: "Specific action to take" },
-                                              technique: { type: Type.STRING, description: "Study technique to use" }
-                                          },
-                                          required: ["topic", "duration", "activity", "technique"]
-                                      }
-                                  }
-                              },
-                              required: ["day", "sessions"]
-                          }
+                    day: { type: Type.STRING },
+                    sessions: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          topic: { type: Type.STRING },
+                          duration: { type: Type.STRING },
+                          activity: { type: Type.STRING },
+                          technique: { type: Type.STRING }
+                        },
+                        required: ["topic", "duration", "activity", "technique"]
                       }
+                    }
                   },
-                  required: ["overview", "schedule", "tips", "prerequisites"]
+                  required: ["day", "sessions"]
+                }
               }
-          } : {})
+            }
+          }
         },
-        required: mode === 'deep' ? ["title", "summary", "tasks", "studyPlan"] : ["title", "summary", "tasks"]
+        required: ["title", "summary", "tasks"]
       }
     }
   });
 
   const text = response.text;
-  if (!text) {
-      throw new Error("No response from AI");
-  }
+  if (!text) throw new Error("AI extraction failed. Please check the document clarity.");
 
   try {
       return JSON.parse(text) as AnalysisResponse;
   } catch (e) {
-      console.error("Failed to parse JSON response", e);
-      throw new Error("Invalid response format from AI");
+      console.error("Gemini JSON Parsing Error:", text);
+      throw new Error("Could not structure the data. Please try a clearer image.");
   }
 };

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ScannedDocument, TaskItem, Priority } from '../types';
-import { X, CheckCircle2, Circle, AlertCircle, Trash2, Scan, Crosshair, ImageOff, FileText, ZoomIn, ZoomOut, Maximize2, CheckSquare, ArrowUpRight, ArrowLeftRight, ChevronDown, BookOpen } from 'lucide-react';
+import { X, CheckCircle2, Circle, AlertCircle, Trash2, Scan, Crosshair, ImageOff, FileText, ZoomIn, ZoomOut, Maximize2, CheckSquare, ArrowUpRight, ArrowLeftRight, ChevronDown, BookOpen, Lock } from 'lucide-react';
 
 interface TaskDetailModalProps {
   document: ScannedDocument;
@@ -9,10 +9,11 @@ interface TaskDetailModalProps {
   onToggleTask: (docId: string, taskId: string) => void;
   onUpdatePriority: (docId: string, taskId: string, newPriority: Priority) => void;
   onDelete: (docId: string) => void;
-  onViewStudyPlan?: (docId: string) => void; // New prop
+  onViewStudyPlan?: (docId: string) => void;
+  isPro?: boolean;
 }
 
-export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ document, onClose, onToggleTask, onUpdatePriority, onDelete, onViewStudyPlan }) => {
+export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ document, onClose, onToggleTask, onUpdatePriority, onDelete, onViewStudyPlan, isPro }) => {
   const [activeTab, setActiveTab] = useState<'tasks' | 'original'>('tasks');
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const [scanLineY, setScanLineY] = useState(0);
@@ -117,10 +118,6 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ document, onCl
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
       
-      {/* 
-         ANIMATION CHANGE: 
-         Use slide-in-from-bottom to mimic "coming up" like a sheet of paper.
-      */}
       <div 
         className="bg-black w-full h-[95vh] sm:h-[90vh] sm:rounded-3xl sm:max-w-6xl shadow-[0_0_100px_rgba(242,95,76,0.1)] flex flex-col sm:flex-row overflow-hidden relative border border-[#F25F4C]/20 animate-in slide-in-from-bottom duration-500 ease-out"
       >
@@ -258,13 +255,20 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ document, onCl
                      <p className="text-[#F25F4C] text-xs font-mono uppercase tracking-widest">{document.tasks.length} tasks extracted // {document.title}</p>
                 </div>
                 
-                {/* View Study Plan Button */}
+                {/* View Study Plan Button - Pro Guarded */}
                 {document.studyPlan && onViewStudyPlan && (
                     <button 
                         onClick={() => onViewStudyPlan(document.id)}
-                        className="px-4 py-2 bg-[#F25F4C]/10 border border-[#F25F4C] text-[#F25F4C] rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#F25F4C] hover:text-black transition-all flex items-center gap-2 animate-pop-in"
+                        className={`
+                          px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 animate-pop-in
+                          ${isPro 
+                            ? 'bg-[#F25F4C]/10 border border-[#F25F4C] text-[#F25F4C] hover:bg-[#F25F4C] hover:text-black' 
+                            : 'bg-white/5 border border-white/10 text-gray-500 hover:text-white hover:border-white/40'
+                          }
+                        `}
                     >
-                        <BookOpen size={14} /> View Plan
+                        {isPro ? <BookOpen size={14} /> : <Lock size={14} />}
+                        {isPro ? 'View Plan' : 'Unlock Plan'}
                     </button>
                 )}
             </div>
@@ -304,7 +308,6 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ document, onCl
                                             {task.description}
                                         </p>
                                         <div className="flex items-center gap-3 mt-3">
-                                            {/* Priority Toggle - Made clearer */}
                                             <button 
                                                 onClick={(e) => togglePriority(e, task)}
                                                 className={`

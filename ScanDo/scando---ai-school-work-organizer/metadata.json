@@ -9,5 +9,7 @@
     "gemini ai",
     "homework helper"
   ],
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
