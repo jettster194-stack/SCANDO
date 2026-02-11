@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckCircle2, Zap, Shield, Database, Infinity, BrainCircuit, X } from 'lucide-react';
 
@@ -62,7 +63,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onBack, onGoToCheckout
                 <div className="mb-6">
                     <h3 className="text-2xl font-bold text-[#F25F4C] mb-2">ScanDo PRO</h3>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-5xl font-anton text-white">$5.99</span>
+                        <span className="text-5xl font-anton text-white">$5.00</span>
                         <span className="text-gray-500">/ month</span>
                     </div>
                     <p className="text-gray-400 text-sm mt-4 leading-relaxed">

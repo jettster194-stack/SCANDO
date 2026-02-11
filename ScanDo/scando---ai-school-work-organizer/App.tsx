@@ -97,8 +97,19 @@ export const App = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [showScanPage, setShowScanPage] = useState(false);
 
-  // Load from local storage
+  // Load from local storage and check for Stripe success param
   useEffect(() => {
+    // Check for payment success redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+        setIsPro(true);
+        localStorage.setItem('scando_pro', 'true');
+        setView('success');
+        // Clean URL to avoid re-triggering on refresh if user navigates away and back, 
+        // though typically we just want to clear the query param for clean UI.
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+
     const savedDocs = localStorage.getItem('scando_docs');
     if (savedDocs) {
       try {
@@ -578,7 +589,7 @@ export const App = () => {
                               
                               <div className="mb-8 text-center">
                                   <h3 className="text-2xl font-bold text-[#F25F4C] mb-2">Pro Access</h3>
-                                  <div className="text-5xl font-anton text-white mb-4">$5.99<span className="text-lg text-gray-500 font-sans font-normal">/mo</span></div>
+                                  <div className="text-5xl font-anton text-white mb-4">$5.00<span className="text-lg text-gray-500 font-sans font-normal">/mo</span></div>
                                   <p className="text-sm text-gray-400 max-w-xs mx-auto">
                                       Unlock the Gemini Pro reasoning engine for complex study plans and unlimited archival.
                                   </p>

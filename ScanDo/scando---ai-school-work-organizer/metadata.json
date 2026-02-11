@@ -1,7 +1,13 @@
-
 {
   "name": "ScanDo - AI School Work Organizer",
   "description": "The ultimate AI to-do list generator. Transform physical notes, PDFs, and screenshots into actionable study plans and task lists instantly using Gemini AI.",
-  "keywords": ["ai todo list", "school work organizer", "study planner", "task generator", "gemini ai", "homework helper"],
+  "keywords": [
+    "ai todo list",
+    "school work organizer",
+    "study planner",
+    "task generator",
+    "gemini ai",
+    "homework helper"
+  ],
   "requestFramePermissions": []
 }
