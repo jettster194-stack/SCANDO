@@ -107,7 +107,7 @@ export const ScannerPage: React.FC<ScannerPageProps> = ({ onScan, onNavigate, cu
                     <div className="col-span-2 space-y-8">
                         <div>
                             <p className="text-xs font-bold text-[#F25F4C] mb-4 uppercase tracking-widest flex items-center gap-2 opacity-80">
-                                <span className="text-[#F25F4C]">></span> Select Processing Mode
+                                <span className="text-[#F25F4C]">&gt;</span> Select Processing Mode
                             </p>
                             <div className="flex gap-4">
                                 <button 
@@ -184,7 +184,7 @@ export const ScannerPage: React.FC<ScannerPageProps> = ({ onScan, onNavigate, cu
                                         </div>
                                     ) : (
                                         <div className="text-gray-500 font-mono text-base group-hover:text-[#F25F4C] transition-colors truncate z-10 flex items-center w-full">
-                                            <span className="text-[#F25F4C] animate-pulse font-bold mr-3 text-xl">></span>
+                                            <span className="text-[#F25F4C] animate-pulse font-bold mr-3 text-xl">&gt;</span>
                                             Click or drag file...
                                         </div>
                                     )}
