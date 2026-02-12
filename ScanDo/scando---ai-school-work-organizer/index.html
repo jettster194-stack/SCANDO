@@ -18,10 +18,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Anton&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
     
-    <!-- Global Shim for process.env to prevent "black screen" crashes on load -->
+    <!-- Global Shim for process.env with INJECTED API KEY -->
     <script>
-      if (typeof window !== 'undefined' && typeof window.process === 'undefined') {
-        window.process = { env: {} };
+      window.process = window.process || {};
+      window.process.env = window.process.env || {};
+      
+      // Injecting the provided API Key directly so it works on deployment
+      if (!window.process.env.API_KEY) {
+        window.process.env.API_KEY = "AIzaSyBMWwKdQj1LY9HpJ7VzktgtAGaCSC4Pt98";
       }
     </script>
 

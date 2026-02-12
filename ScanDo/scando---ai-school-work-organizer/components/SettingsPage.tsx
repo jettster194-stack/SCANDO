@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Bell, Shield, Database, Moon, Sun, Monitor, Trash2, Cpu, ScanLine, Smartphone, Check, Download } from 'lucide-react';
+import { Settings, Bell, Shield, Database, Moon, Sun, Monitor, Trash2, Cpu, ScanLine, Smartphone, Check, Download, Key } from 'lucide-react';
 
 interface SettingSectionProps {
   title: string;
@@ -153,7 +153,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onClearData 
              />
         </SettingSection>
 
-        <SettingSection title="Processing Preferences">
+        <SettingSection title="Processing Configuration">
             <ToggleItem 
                 label="Auto-Save to Local Storage"
                 desc="Persist scanned documents securely on device"

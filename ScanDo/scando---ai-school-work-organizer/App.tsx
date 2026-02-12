@@ -33,12 +33,13 @@ import { CheckoutPage } from './components/CheckoutPage';
 import { SuccessPage } from './components/SuccessPage';
 import { StudyPlanPage } from './components/StudyPlanPage';
 import { BillingPage } from './components/BillingPage';
+import { SettingsPage } from './components/SettingsPage';
 import { FileUpload } from './components/FileUpload';
 import { analyzeDocument } from './services/geminiService';
 import { ScannedDocument, Priority } from './types';
 
 export const App = () => {
-  const [view, setView] = useState<'landing' | 'dashboard' | 'calendar' | 'history' | 'pricing' | 'checkout' | 'success' | 'studyPlan' | 'billing'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'calendar' | 'history' | 'pricing' | 'checkout' | 'success' | 'studyPlan' | 'billing' | 'settings'>('landing');
   const [documents, setDocuments] = useState<ScannedDocument[]>([]);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [isPro, setIsPro] = useState(false);
@@ -99,6 +100,7 @@ export const App = () => {
         status: 'completed'
       } : doc));
     } catch (error) {
+      console.error("Scan Failed:", error);
       setDocuments(prev => prev.map(doc => doc.id === tempId ? { ...doc, status: 'error', summary: 'Failed to process.' } : doc));
     }
   };
@@ -127,7 +129,7 @@ export const App = () => {
       return (
         <ScannerPage 
           onScan={handleScan}
-          onNavigate={(v) => { setShowScanPage(false); setView(v); }}
+          onNavigate={(v) => { setShowScanPage(false); setView(v as any); }}
           currentView="scanner"
           isPro={isPro}
           onOpenPricing={() => { setShowScanPage(false); setView('pricing'); }}
@@ -402,6 +404,14 @@ export const App = () => {
            </div>
         );
 
+      case 'settings':
+        return (
+          <div className="min-h-screen bg-black flex flex-col">
+             <Header onUploadClick={() => setShowScanPage(true)} onNavigate={setView} currentView="settings" isPro={isPro} onOpenPricing={() => setView('pricing')} />
+             <div className="mt-16"><SettingsPage onBack={() => setView('dashboard')} onClearData={() => setDocuments([])} /></div>
+          </div>
+        );
+
       case 'pricing':
         return (
            <div className="min-h-screen bg-black flex flex-col">
@@ -438,7 +448,7 @@ export const App = () => {
   return (
     <div className="text-white font-sans selection:bg-[#F25F4C] selection:text-black">
       {renderContent()}
-      {selectedDocId && view !== 'studyPlan' && view !== 'billing' && (
+      {selectedDocId && view !== 'studyPlan' && view !== 'billing' && view !== 'settings' && (
         <TaskDetailModal 
           document={documents.find(d => d.id === selectedDocId)!} 
           onClose={() => setSelectedDocId(null)}

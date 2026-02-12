@@ -27,14 +27,15 @@ const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: s
  * Analyzes an uploaded document (image or PDF) using Gemini.
  */
 export const analyzeDocument = async (file: File, mode: 'fast' | 'deep' = 'fast'): Promise<AnalysisResponse> => {
-  // Use a fallback to empty string if process.env is not defined to avoid ReferenceErrors
-  const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : '';
+  // Retrieve the API Key injected in index.html
+  const apiKey = process.env.API_KEY;
   
   if (!apiKey) {
-    console.error("API_KEY is missing from environment variables.");
+    console.error("CRITICAL ERROR: API_KEY is missing. Ensure it is defined in index.html or environment variables.");
+    throw new Error("Service Configuration Error. Please contact the developer.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   
   const filePart = await fileToGenerativePart(file);
   const today = new Date().toISOString().split('T')[0];
@@ -56,80 +57,93 @@ export const analyzeDocument = async (file: File, mode: 'fast' | 'deep' = 'fast'
     4. List 3 high-impact EXECUTION_TIPS.`;
   }
 
-  const response = await ai.models.generateContent({
-    model: mode === 'deep' ? 'gemini-3-pro-preview' : 'gemini-3-flash-preview',
-    contents: {
-        parts: [
-            filePart,
-            { text: userPrompt }
-        ]
-    },
-    config: {
-      systemInstruction,
-      responseMimeType: "application/json",
-      thinkingConfig: mode === 'deep' ? { thinkingBudget: 4000 } : undefined,
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          title: { type: Type.STRING },
-          summary: { type: Type.STRING },
-          tasks: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                description: { type: Type.STRING },
-                priority: { type: Type.STRING, enum: [Priority.High, Priority.Medium, Priority.Low] },
-                category: { type: Type.STRING },
-                dueDate: { type: Type.STRING }
-              },
-              required: ["description", "priority", "category"]
-            }
-          },
-          studyPlan: {
+  try {
+      const response = await ai.models.generateContent({
+        model: mode === 'deep' ? 'gemini-3-pro-preview' : 'gemini-3-flash-preview',
+        contents: {
+            parts: [
+                filePart,
+                { text: userPrompt }
+            ]
+        },
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          thinkingConfig: mode === 'deep' ? { thinkingBudget: 4000 } : undefined,
+          responseSchema: {
             type: Type.OBJECT,
             properties: {
-              overview: { type: Type.STRING },
-              prerequisites: { type: Type.ARRAY, items: { type: Type.STRING } },
-              tips: { type: Type.ARRAY, items: { type: Type.STRING } },
-              schedule: {
+              title: { type: Type.STRING },
+              summary: { type: Type.STRING },
+              tasks: {
                 type: Type.ARRAY,
                 items: {
                   type: Type.OBJECT,
                   properties: {
-                    day: { type: Type.STRING },
-                    sessions: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          topic: { type: Type.STRING },
-                          duration: { type: Type.STRING },
-                          activity: { type: Type.STRING },
-                          technique: { type: Type.STRING }
-                        },
-                        required: ["topic", "duration", "activity", "technique"]
-                      }
-                    }
+                    description: { type: Type.STRING },
+                    priority: { type: Type.STRING, enum: [Priority.High, Priority.Medium, Priority.Low] },
+                    category: { type: Type.STRING },
+                    dueDate: { type: Type.STRING }
                   },
-                  required: ["day", "sessions"]
+                  required: ["description", "priority", "category"]
+                }
+              },
+              studyPlan: {
+                type: Type.OBJECT,
+                properties: {
+                  overview: { type: Type.STRING },
+                  prerequisites: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  tips: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  schedule: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        day: { type: Type.STRING },
+                        sessions: {
+                          type: Type.ARRAY,
+                          items: {
+                            type: Type.OBJECT,
+                            properties: {
+                              topic: { type: Type.STRING },
+                              duration: { type: Type.STRING },
+                              activity: { type: Type.STRING },
+                              technique: { type: Type.STRING }
+                            },
+                            required: ["topic", "duration", "activity", "technique"]
+                          }
+                        }
+                      },
+                      required: ["day", "sessions"]
+                    }
+                  }
                 }
               }
-            }
+            },
+            required: ["title", "summary", "tasks"]
           }
-        },
-        required: ["title", "summary", "tasks"]
-      }
-    }
-  });
+        }
+      });
 
-  const text = response.text;
-  if (!text) throw new Error("AI extraction failed. Please check the document clarity.");
+      const text = response.text;
+      if (!text) throw new Error("AI extraction returned empty result.");
 
-  try {
       return JSON.parse(text) as AnalysisResponse;
-  } catch (e) {
-      console.error("Gemini JSON Parsing Error:", text);
-      throw new Error("Could not structure the data. Please try a clearer image.");
+
+  } catch (e: any) {
+      console.error("Gemini API Error:", e);
+      
+      const msg = e.toString().toLowerCase();
+
+      // Check for common API Key Restriction errors
+      if (msg.includes('403') || msg.includes('permission denied') || msg.includes('key not valid')) {
+         throw new Error("Access Denied: Domain not allowed. Check API Key restrictions in Google Cloud Console.");
+      }
+      
+      if (msg.includes('400') || msg.includes('invalid argument')) {
+          throw new Error("Bad Request: The file format might not be supported or the image is corrupt.");
+      }
+
+      throw new Error("Analysis failed. Please try a clearer image or PDF.");
   }
 };

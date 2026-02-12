@@ -11,8 +11,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onBack, onSuccess })
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
-  // Your specific Stripe Payment Link
-  const STRIPE_LINK = "https://buy.stripe.com/00w4gz3Fkepw4lhaX1bII01";
+  /**
+   * --- BILLING SETUP INSTRUCTIONS ---
+   * 
+   * 1. Go to https://stripe.com and sign up for an account.
+   * 2. In the Stripe Dashboard, go to "Products" -> "Add Product".
+   * 3. Name it "ScanDo Pro Subscription" and set the price to $5.00 (Recurring / Monthly).
+   * 4. Once created, click "Create Payment Link" for that product.
+   * 5. Copy the URL (it starts with https://buy.stripe.com/...).
+   * 6. Paste that URL below into the STRIPE_LINK variable.
+   */
+  
+  const STRIPE_LINK = "https://buy.stripe.com/00w4gz3Fkepw4lhaX1bII01"; // <--- PASTE YOUR LINK HERE
 
   const handleProceedToStripe = () => {
     setIsRedirecting(true);

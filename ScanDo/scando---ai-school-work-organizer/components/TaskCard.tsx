@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ScannedDocument, Priority } from '../types';
-import { CheckCircle2, Circle, ArrowUpRight, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, ArrowUpRight, FileText, Loader2, AlertCircle, Settings, XCircle } from 'lucide-react';
 
 interface TaskCardProps {
   document: ScannedDocument;
@@ -43,11 +43,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ document, onClick, index = 0
   if (document.status === 'error') {
      return (
       <div 
-        className="w-full bg-[#1a0505] aspect-[3/4] flex flex-col items-center justify-center border border-red-900/50 p-6 text-center animate-pop-in"
+        className="w-full bg-[#1a0505] aspect-[3/4] flex flex-col items-center justify-center border border-red-900/50 p-6 text-center animate-pop-in relative group"
         style={style}
       >
+        <div className="mb-4 text-red-500">
+            <XCircle size={32} />
+        </div>
         <p className="font-bold font-mono text-red-600 mb-2">ERROR_LOAD</p>
-        <p className="text-xs text-red-500">File extraction failed.</p>
+        <p className="text-xs text-red-500 mb-4 opacity-70">Extraction failed.</p>
+        <div className="text-[10px] text-gray-500 opacity-50">
+           Try a clearer image
+        </div>
       </div>
     );
   }
